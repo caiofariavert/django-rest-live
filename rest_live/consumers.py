@@ -1,12 +1,12 @@
-from typing import Any, Dict, Type, List, Union, Set
 from dataclasses import dataclass
+from typing import Any, Dict, List, Set, Type, Union
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.http import Http404
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 
-from rest_live import get_group_name, DELETED, UPDATED, CREATED
+from rest_live import CREATED, DELETED, UPDATED, get_group_name
 from rest_live.mixins import RealtimeMixin
 
 KwargType = Dict[str, Union[int, str]]

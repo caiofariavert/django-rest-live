@@ -1,12 +1,12 @@
-from urllib.parse import urlparse, unquote
 import json
+from importlib import import_module
+from urllib.parse import unquote, urlparse
 
 from asgiref.sync import async_to_sync
 from asgiref.testing import ApplicationCommunicator
+from channels.db import database_sync_to_async
 from django.conf import settings
 from django.http import HttpRequest, SimpleCookie
-from importlib import import_module
-from channels.db import database_sync_to_async
 
 
 class APICommunicator(ApplicationCommunicator):

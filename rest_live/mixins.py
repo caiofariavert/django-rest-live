@@ -1,12 +1,12 @@
 from io import BytesIO
-from typing import Type, Set, Tuple, Dict, Any, Optional
+from typing import Type
 
-from channels.http import AsgiRequest
+from django.http import HttpRequest
 from django.db.models import Model
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.utils.decorators import classonlymethod
 from django.utils.http import urlencode
-from rest_framework.generics import GenericAPIView
+
 from rest_live.signals import delete_handler, save_handler
 
 
@@ -46,8 +46,8 @@ class RealtimeMixin(object):
         viewset = cls()
         model_class = viewset.get_model_class()
 
-        post_save.connect(save_handler, sender=model_class, dispatch_uid=f"rest-live")
-        post_delete.connect(delete_handler, sender=model_class, dispatch_uid=f"rest-live")
+        post_save.connect(save_handler, sender=model_class, dispatch_uid="rest-live")
+        post_delete.connect(delete_handler, sender=model_class, dispatch_uid="rest-live")
         return viewset.get_model_class()._meta.label
 
     @classonlymethod
@@ -76,7 +76,7 @@ class RealtimeMixin(object):
         self.args = []
         self.kwargs = view_kwargs
 
-        base_request = AsgiRequest(
+        base_request = HttpRequest(
             {**scope, "method": "GET", "query_string": urlencode(query_params)},
             BytesIO(),
         )
