@@ -1,12 +1,42 @@
 from typing import Type
+from urllib.parse import urlencode as urllib_urlencode
 
-from django.http import HttpRequest
 from django.db.models import Model
 from django.db.models.signals import post_delete, post_save
+from django.http import HttpRequest, QueryDict
 from django.utils.decorators import classonlymethod
 from django.utils.http import urlencode
 
 from rest_live.signals import delete_handler, save_handler
+
+
+def build_asgi_request(scope, query_params):
+    request = HttpRequest()
+
+    request.method = "GET"
+    request.path = scope.get("path", "/")
+
+    query_string = urllib_urlencode(query_params)
+    request.GET = QueryDict(query_string)
+
+    headers = {
+        f"HTTP_{k.decode().upper().replace('-', '_')}": v.decode()
+        for k, v in scope.get("headers", [])
+    }
+
+    request.META = {
+        **headers,
+        "QUERY_STRING": query_string,
+    }
+
+    if "client" in scope:
+        request.META["REMOTE_ADDR"] = scope["client"][0]
+
+    if "server" in scope:
+        request.META["SERVER_NAME"] = scope["server"][0]
+        request.META["SERVER_PORT"] = str(scope["server"][1])
+
+    return request
 
 
 class RealtimeMixin(object):
@@ -75,11 +105,8 @@ class RealtimeMixin(object):
         self.args = []
         self.kwargs = view_kwargs
 
-        base_request = HttpRequest()
-        base_request.method = "GET"
-        base_request.path = scope.get("path", "")
-        base_request.META = {**scope.get("headers", {}), "QUERY_STRING": urlencode(query_params)}
-        
+        base_request = build_asgi_request(scope, query_params)
+
         # TODO: Run other middleware?
         base_request.user = scope.get("user", None)
         base_request.session = scope.get("session", None)
