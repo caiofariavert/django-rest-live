@@ -1,4 +1,3 @@
-from io import BytesIO
 from typing import Type
 
 from django.http import HttpRequest
@@ -76,10 +75,11 @@ class RealtimeMixin(object):
         self.args = []
         self.kwargs = view_kwargs
 
-        base_request = HttpRequest(
-            {**scope, "method": "GET", "query_string": urlencode(query_params)},
-            BytesIO(),
-        )
+        base_request = HttpRequest()
+        base_request.method = "GET"
+        base_request.path = scope.get("path", "")
+        base_request.META = {**scope.get("headers", {}), "QUERY_STRING": urlencode(query_params)}
+        
         # TODO: Run other middleware?
         base_request.user = scope.get("user", None)
         base_request.session = scope.get("session", None)
